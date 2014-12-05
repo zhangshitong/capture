@@ -22,6 +22,11 @@ import com.google.zxing.common.BitMatrix;
 
 /**
  * <p>
+ * 专门为Dataculumn识别使用。 
+ * 成绩单按图形内容为  左上角一个黑色矩形，垂直放置。 
+ *                   右上角一个黑色矩形，水平放置。
+ *                   左下角一个黑色矩形， 水平放置。
+ *                   右下角一个条形码， 水平放置。
  * Detects a candidate barcode-like rectangular region within an image. It
  * starts around the center of the image, increases the size of the candidate
  * region until it finds a white rectangular region. By keeping track of the
@@ -30,11 +35,13 @@ import com.google.zxing.common.BitMatrix;
  *
  * @author David Olivier
  */
-public final class WhiteRectangleDetector {
+public final class BlackRectangleDetector {
 
-  private static final int INIT_SIZE = 30; //去向面积的最小像素 
+  private static final int INIT_SIZE_H = 230; //去向面积的最小像素 -水平方向
+  private static final int INIT_SIZE_V = 460; //去向面积的最小像素 -垂直方向
+  
+  
   private static final int CORR = 1;
-
   private final BitMatrix image;
   private final int height;
   private final int width;
@@ -46,14 +53,14 @@ public final class WhiteRectangleDetector {
   /**
    * @throws NotFoundException if image is too small
    */
-  public WhiteRectangleDetector(BitMatrix image) throws NotFoundException {
+  public BlackRectangleDetector(BitMatrix image) throws NotFoundException {
     this.image = image;
     height = image.getHeight();
     width = image.getWidth();
-    leftInit = (width - INIT_SIZE) >> 1;
-    rightInit = (width + INIT_SIZE) >> 1;
-    upInit = (height - INIT_SIZE) >> 1;
-    downInit = (height + INIT_SIZE) >> 1;
+    leftInit = (width - INIT_SIZE_H) >> 1;
+    rightInit = (width + INIT_SIZE_H) >> 1;
+    upInit = (height - INIT_SIZE_V) >> 1;
+    downInit = (height + INIT_SIZE_V) >> 1;
     if (upInit < 0 || leftInit < 0 || downInit >= height || rightInit >= width) {
       throw NotFoundException.getNotFoundInstance();
     }
@@ -62,7 +69,7 @@ public final class WhiteRectangleDetector {
   /**
    * @throws NotFoundException if image is too small
    */
-  public WhiteRectangleDetector(BitMatrix image, int initSize, int x, int y) throws NotFoundException {
+  public BlackRectangleDetector(BitMatrix image, int initSize, int x, int y) throws NotFoundException {
     this.image = image;
     height = image.getHeight();
     width = image.getWidth();
@@ -99,12 +106,15 @@ public final class WhiteRectangleDetector {
     boolean sizeExceeded = false;
     boolean aBlackPointFoundOnBorder = true;
     boolean atLeastOneBlackPointFoundOnBorder = false;
+
     while (aBlackPointFoundOnBorder) {
+
       aBlackPointFoundOnBorder = false;
+
       // .....
       // .   |
       // .....
-      // 首先找到 图形的又边框位置
+      // 找到图形区域的右边位置。
       boolean rightBorderNotWhite = true;
       while (rightBorderNotWhite && right < width) {
         rightBorderNotWhite = containsBlackPoint(up, down, right, false);
@@ -118,10 +128,11 @@ public final class WhiteRectangleDetector {
         sizeExceeded = true;
         break;
       }
-
+      
       // .....
       // .   .
       // .___.
+      // 找到图形区域的下边位置。
       boolean bottomBorderNotWhite = true;
       while (bottomBorderNotWhite && down < height) {
         bottomBorderNotWhite = containsBlackPoint(left, right, down, true);
@@ -139,6 +150,7 @@ public final class WhiteRectangleDetector {
       // .....
       // |   .
       // .....
+     // 找到图形区域的左边位置。
       boolean leftBorderNotWhite = true;
       while (leftBorderNotWhite && left >= 0) {
         leftBorderNotWhite = containsBlackPoint(up, down, left, false);
@@ -156,6 +168,7 @@ public final class WhiteRectangleDetector {
       // .___.
       // .   .
       // .....
+      //找到图形区域的上边框边位置。
       boolean topBorderNotWhite = true;
       while (topBorderNotWhite && up >= 0) {
         topBorderNotWhite = containsBlackPoint(left, right, up, true);
@@ -175,13 +188,18 @@ public final class WhiteRectangleDetector {
       }
 
     }
-
+    // sizeExceeded 四个边线均找到无异常
+    // 在整个图形中 ，至少有一个黑点。图像。 
+    
     if (!sizeExceeded && atLeastOneBlackPointFoundOnBorder) {
-
-      int maxSize = right - left;
-
+      int maxSizeHorizontal = right - left; //水平距离最大值
+      int maxSizeVertical = down - up; //垂直距离， 最大值.
+      int maxSize = Math.min(maxSizeHorizontal, maxSizeVertical);
+      
+      //找到最下方的数据点 ；坐下放为水平放置的矩形黑色。 长度必须大与高端的两倍。 高度大于20px;
+      //BLACK_BLOCK_SIZE = 30, 宽度。 
       ResultPoint z = null;
-      for (int i = 1; i < maxSize; i++) {
+      for (int i = 1; i < maxSizeHorizontal; i++) {
         z = getBlackPointOnSegment(left, down - i, left + i, down);
         if (z != null) {
           break;
@@ -231,13 +249,29 @@ public final class WhiteRectangleDetector {
         throw NotFoundException.getNotFoundInstance();
       }
 
-      return centerEdges(y, z, x, t);
+      float yi = y.getX();
+      float zi = z.getX();
+      float xi = x.getX();
+      float ti = t.getX();
+      float invalidX = width / 2.0f;
+      if (yi < invalidX || zi > invalidX || xi < invalidX || ti > invalidX ) { //如果四个角，大多数黑点，则没有数据，直接返回。
+    	  throw NotFoundException.getNotFoundInstance(); //如果四个角落，图像缺失太多。 
+      }
+      return new ResultPoint[]{y, z, x ,t};
 
     } else {
       throw NotFoundException.getNotFoundInstance();
     }
   }
-
+  /**
+   * 在一个区域的对角线附近找黑点。
+   * @param aX
+   * @param aY
+   * @param bX
+   * @param bY
+   * @return
+   */
+  //  
   private ResultPoint getBlackPointOnSegment(float aX, float aY, float bX, float bY) {
     int dist = MathUtils.round(MathUtils.distance(aX, aY, bX, bY));
     float xStep = (bX - aX) / dist;
@@ -253,52 +287,7 @@ public final class WhiteRectangleDetector {
     return null;
   }
 
-  /**
-   * recenters the points of a constant distance towards the center
-   *
-   * @param y bottom most point
-   * @param z left most point
-   * @param x right most point
-   * @param t top most point
-   * @return {@link ResultPoint}[] describing the corners of the rectangular
-   *         region. The first and last points are opposed on the diagonal, as
-   *         are the second and third. The first point will be the topmost
-   *         point and the last, the bottommost. The second point will be
-   *         leftmost and the third, the rightmost
-   */
-  private ResultPoint[] centerEdges(ResultPoint y, ResultPoint z,
-                                    ResultPoint x, ResultPoint t) {
-
-    //
-    //       t            t
-    //  z                      x
-    //        x    OR    z
-    //   y                    y
-    //
-
-    float yi = y.getX();
-    float yj = y.getY();
-    float zi = z.getX();
-    float zj = z.getY();
-    float xi = x.getX();
-    float xj = x.getY();
-    float ti = t.getX();
-    float tj = t.getY();
-
-    if (yi < width / 2.0f) {
-      return new ResultPoint[]{
-          new ResultPoint(ti - CORR, tj + CORR),
-          new ResultPoint(zi + CORR, zj + CORR),
-          new ResultPoint(xi - CORR, xj - CORR),
-          new ResultPoint(yi + CORR, yj - CORR)};
-    } else {
-      return new ResultPoint[]{
-          new ResultPoint(ti + CORR, tj + CORR),
-          new ResultPoint(zi + CORR, zj - CORR),
-          new ResultPoint(xi - CORR, xj + CORR),
-          new ResultPoint(yi - CORR, yj - CORR)};
-    }
-  }
+ 
 
   /**
    * Determines whether a segment contains a black point
