@@ -11,14 +11,9 @@ import com.google.zxing.NotFoundException;
 import com.google.zxing.Reader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
-import com.google.zxing.aztec.AztecReader;
 import com.google.zxing.datacolumn.DataColumnReader;
-import com.google.zxing.datamatrix.DataMatrixReader;
-import com.google.zxing.maxicode.MaxiCodeReader;
 import com.google.zxing.multi.MultipleBarcodeReader;
 import com.google.zxing.oned.MultiFormatOneDReader;
-import com.google.zxing.pdf417.PDF417Reader;
-import com.google.zxing.qrcode.QRCodeReader;
 
 /**
  * DataColumn 和 1D 条形码的混合读取
@@ -90,23 +85,6 @@ public class DataColumnAndOnedMultiReader implements MultipleBarcodeReader {
 			if (addOneDReader) { // 一维码的解码器
 				readers.add(new MultiFormatOneDReader(hints));
 			}
-			if (formats.contains(BarcodeFormat.QR_CODE)) {
-				readers.add(new QRCodeReader());
-		    }
-		    if (formats.contains(BarcodeFormat.DATA_MATRIX)) {
-		        readers.add(new DataMatrixReader());
-		    }
-		    if (formats.contains(BarcodeFormat.AZTEC)) {
-		        readers.add(new AztecReader());
-		    }
-		    if (formats.contains(BarcodeFormat.PDF_417)) {
-		        readers.add(new PDF417Reader());
-		    }
-		    if (formats.contains(BarcodeFormat.MAXICODE)) {
-		        readers.add(new MaxiCodeReader());
-		    }
-			
-			
 			
 		}else{ //默认添加多个代码
 			readers.add(new DataColumnReader());

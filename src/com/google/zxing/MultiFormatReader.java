@@ -16,21 +16,16 @@
 
 package com.google.zxing;
 
-import android.util.Log;
-
-import com.google.zxing.aztec.AztecReader;
-import com.google.zxing.datacolumn.DataColumnReader;
-import com.google.zxing.datamatrix.DataMatrixReader;
-import com.google.zxing.maxicode.MaxiCodeReader;
-import com.google.zxing.multi.MultipleBarcodeReader;
-import com.google.zxing.multi.datacolumn.DataColumnAndOnedMultiReader;
-import com.google.zxing.oned.MultiFormatOneDReader;
-import com.google.zxing.pdf417.PDF417Reader;
-import com.google.zxing.qrcode.QRCodeReader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+
+import android.util.Log;
+
+import com.google.zxing.datacolumn.DataColumnReader;
+import com.google.zxing.multi.MultipleBarcodeReader;
+import com.google.zxing.multi.datacolumn.DataColumnAndOnedMultiReader;
+import com.google.zxing.oned.MultiFormatOneDReader;
 
 /**
  * MultiFormatReader is a convenience class and the main entry point into the library for most uses.
@@ -154,21 +149,6 @@ public final class MultiFormatReader implements Reader {
       if (addOneDReader && !tryHarder) { // 一维码的解码器 
         readers.add(new MultiFormatOneDReader(hints));
       }
-      if (formats.contains(BarcodeFormat.QR_CODE)) {
-        readers.add(new QRCodeReader());
-      }
-      if (formats.contains(BarcodeFormat.DATA_MATRIX)) {
-        readers.add(new DataMatrixReader());
-      }
-      if (formats.contains(BarcodeFormat.AZTEC)) {
-        readers.add(new AztecReader());
-      }
-      if (formats.contains(BarcodeFormat.PDF_417)) {
-         readers.add(new PDF417Reader());
-      }
-      if (formats.contains(BarcodeFormat.MAXICODE)) {
-         readers.add(new MaxiCodeReader());
-      }
       // just for wisedu //这个用来解析成绩登分册表单 
       if (formats.contains(BarcodeFormat.DATA_COLUMN)) { //如果同时启用了条形码， 则使用条形码的复合
           readers.add(new DataColumnReader());
@@ -188,12 +168,6 @@ public final class MultiFormatReader implements Reader {
       if (!tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));
       }
-      //readers.add(new DataColumnReader());
-      readers.add(new QRCodeReader());
-      readers.add(new DataMatrixReader());
-      readers.add(new AztecReader());
-      readers.add(new PDF417Reader());
-      readers.add(new MaxiCodeReader());
       if (tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));
       }
