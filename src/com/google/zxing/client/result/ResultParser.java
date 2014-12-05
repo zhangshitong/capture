@@ -40,25 +40,10 @@ import java.util.regex.Pattern;
 public abstract class ResultParser {
 
   private static final ResultParser[] PARSERS = {
-      new BookmarkDoCoMoResultParser(),
-      new AddressBookDoCoMoResultParser(),
-      new EmailDoCoMoResultParser(),
-      new AddressBookAUResultParser(),
-      new VCardResultParser(),
-      new BizcardResultParser(),
-      new VEventResultParser(),
-      new EmailAddressResultParser(),
-      new SMTPResultParser(),
-      new TelResultParser(),
-      new SMSMMSResultParser(),
-      new SMSTOMMSTOResultParser(),
-      new GeoResultParser(),
       new WifiResultParser(),
       new URLTOResultParser(),
       new URIResultParser(),
-      new ISBNResultParser(),
       new ProductResultParser(),
-      new ExpandedProductResultParser(),
       new DataColumnResultParser()
   };
 
