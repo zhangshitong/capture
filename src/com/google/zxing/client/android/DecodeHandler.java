@@ -49,7 +49,7 @@ final class DecodeHandler extends Handler {
 		this.activity = activity;
 
 	}
-
+  
 	@Override
 	public void handleMessage(Message message) {
 		if (!running) {
