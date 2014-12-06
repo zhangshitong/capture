@@ -213,7 +213,7 @@ public class FinderPatternFinder {
     int maxJ = image.getWidth();
     int[] stateCount = getCrossCheckStateCount();
     int maxCount = BLACK_BLOCK_SIZE;
-    if(originalStateCountTotal < (BLACK_BLOCK_SIZE << 1)){
+    if(originalStateCountTotal > (BLACK_BLOCK_SIZE + 2)){
     	maxCount = (BLACK_BLOCK_SIZE << 1) + 2 ;
     }
     int j = startJ;
@@ -255,11 +255,16 @@ public class FinderPatternFinder {
   protected final boolean handlePossibleCenter(int[] stateCount, int i, int j) {
     int stateCountTotal = stateCount[0] ; 
     float centerJ = centerFromEnd(stateCount, j);
-    
     float centerI = crossCheckVertical(i, (int) centerJ, stateCountTotal);
+    int centerStateCountVertical = crossCheckStateCount[0];
+    
+    
     if (!Float.isNaN(centerI)) {
       // Re-cross check
       centerJ = crossCheckHorizontal((int) centerJ, (int) centerI, stateCountTotal);
+      int centerStateCountHorizontal = crossCheckStateCount[0];
+      //获取方向 
+      int direction =  (centerStateCountHorizontal > centerStateCountVertical) ? FinderPattern.HORIZONTAL : FinderPattern.VERTICAL;
       if (!Float.isNaN(centerJ)) {
         float estimatedModuleSize = (float) stateCountTotal / 4.0f;
         if(stateCountTotal < (BLACK_BLOCK_SIZE << 1)){
@@ -269,7 +274,7 @@ public class FinderPatternFinder {
         for (int index = 0; index < possibleCenters.size(); index++) {
           FinderPattern center = possibleCenters.get(index);
           // Look for about the same center and module size:
-          if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
+          if (center.aboutEquals(estimatedModuleSize, centerI, centerJ, direction)) {
             possibleCenters.set(index, center.combineEstimate(centerI, centerJ, estimatedModuleSize));
             found = true;
             break;
@@ -277,6 +282,7 @@ public class FinderPatternFinder {
         }
         if (!found) {
           FinderPattern point = new FinderPattern(centerJ, centerI, estimatedModuleSize);
+          point.setDirection(direction);
           possibleCenters.add(point);
           if (resultPointCallback != null) {
             resultPointCallback.foundPossibleResultPoint(point);

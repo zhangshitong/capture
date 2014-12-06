@@ -26,9 +26,11 @@ import com.google.zxing.ResultPoint;
  * @author Sean Owen
  */
 public final class FinderPattern extends ResultPoint {
-
+  public static int HORIZONTAL = 0;
+  public static int VERTICAL = 90;
   private final float estimatedModuleSize;
   private int count;
+  private int direction ;
 
   FinderPattern(float posX, float posY, float estimatedModuleSize) {
     this(posX, posY, estimatedModuleSize, 1);
@@ -38,6 +40,7 @@ public final class FinderPattern extends ResultPoint {
     super(posX, posY);
     this.estimatedModuleSize = estimatedModuleSize;
     this.count = count;
+    this.direction = HORIZONTAL;
   }
 
   public float getEstimatedModuleSize() {
@@ -52,12 +55,21 @@ public final class FinderPattern extends ResultPoint {
     this.count++;
   }
 
-  /**
+  public int getDirection() {
+	return direction;
+	}
+	
+	public void setDirection(int direction) {
+		this.direction = direction;
+	}
+
+/**
    * <p>Determines if this finder pattern "about equals" a finder pattern at the stated
    * position and size -- meaning, it is at nearly the same center with nearly the same size.</p>
    */
-  boolean aboutEquals(float moduleSize, float i, float j) {
-    if (Math.abs(i - getY()) <= moduleSize && Math.abs(j - getX()) <= moduleSize) {
+  boolean aboutEquals(float moduleSize, float i, float j, int direction ) {
+     if (this.direction == direction
+    		&& Math.abs(i - getY()) <= moduleSize && Math.abs(j - getX()) <= moduleSize) {
       float moduleSizeDiff = Math.abs(moduleSize - estimatedModuleSize);
       return moduleSizeDiff <= 1.0f || moduleSizeDiff <= estimatedModuleSize;
     }
@@ -74,7 +86,9 @@ public final class FinderPattern extends ResultPoint {
     float combinedX = (count * getX() + j) / combinedCount;
     float combinedY = (count * getY() + i) / combinedCount;
     float combinedModuleSize = (count * estimatedModuleSize + newModuleSize) / combinedCount;
-    return new FinderPattern(combinedX, combinedY, combinedModuleSize, combinedCount);
+    FinderPattern point = new FinderPattern(combinedX, combinedY, combinedModuleSize, combinedCount);
+    point.setDirection(direction);
+    return point;
   }
 
 }
